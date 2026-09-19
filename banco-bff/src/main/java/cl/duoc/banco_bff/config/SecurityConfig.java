@@ -22,89 +22,42 @@ public class SecurityConfig {
 
         http
             .csrf(csrf -> csrf.disable())
-
-            .cors(cors ->
-                cors.configurationSource(
-                    corsConfigurationSource()
-                )
-            )
-
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
 
                 .requestMatchers("/actuator/health")
                     .permitAll()
 
-                // =========================
-                // CUENTAS - EMPLEADO
-                // =========================
-
-                .requestMatchers(
-                        HttpMethod.POST,
-                        "/api/cuentas"
-                )
+                .requestMatchers("/api/admin/usuarios/**")
                     .hasRole("Empleado")
 
-                .requestMatchers(
-                        HttpMethod.PUT,
-                        "/api/cuentas/*/numero"
-                )
+                .requestMatchers(HttpMethod.POST, "/api/cuentas")
                     .hasRole("Empleado")
 
-                // =========================
-                // CUENTAS - CLIENTE / EMPLEADO
-                // =========================
+                .requestMatchers(HttpMethod.PUT, "/api/cuentas/*/numero")
+                    .hasRole("Empleado")
 
-                .requestMatchers(
-                        HttpMethod.GET,
-                        "/api/cuentas/**"
-                )
+                .requestMatchers(HttpMethod.GET, "/api/cuentas/**")
                     .hasAnyRole("Cliente", "Empleado")
 
-                // =========================
-                // SOLICITUDES - CLIENTE
-                // =========================
-
-                .requestMatchers(
-                        HttpMethod.POST,
-                        "/api/solicitudes"
-                )
+                .requestMatchers(HttpMethod.POST, "/api/solicitudes")
                     .hasRole("Cliente")
 
-                // =========================
-                // SOLICITUDES - CLIENTE / EMPLEADO
-                // =========================
-
-                .requestMatchers(
-                        HttpMethod.GET,
-                        "/api/solicitudes/**"
-                )
+                .requestMatchers(HttpMethod.GET, "/api/solicitudes/**")
                     .hasAnyRole("Cliente", "Empleado")
 
-                // =========================
-                // SOLICITUDES - EMPLEADO
-                // =========================
-
-                .requestMatchers(
-                        HttpMethod.PUT,
-                        "/api/solicitudes/*/aprobar"
-                )
+                .requestMatchers(HttpMethod.PUT, "/api/solicitudes/*/aprobar")
                     .hasRole("Empleado")
 
-                .requestMatchers(
-                        HttpMethod.PUT,
-                        "/api/solicitudes/*/rechazar"
-                )
+                .requestMatchers(HttpMethod.PUT, "/api/solicitudes/*/rechazar")
                     .hasRole("Empleado")
 
                 .anyRequest()
                     .authenticated()
             )
-
             .oauth2ResourceServer(oauth2 ->
                 oauth2.jwt(jwt ->
-                    jwt.jwtAuthenticationConverter(
-                        jwtAuthenticationConverter()
-                    )
+                    jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
                 )
             );
 
@@ -114,8 +67,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration configuration =
-                new CorsConfiguration();
+        CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
                 List.of("http://localhost:5173")
