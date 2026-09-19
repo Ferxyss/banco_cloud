@@ -54,6 +54,8 @@ public class CognitoService {
 
             List<String> grupos = obtenerGrupos(usuario.username());
 
+            String rol = determinarRol(grupos);
+
             boolean autorizado = grupos.contains(clienteGroup);
 
             UsuarioCognitoDTO dto = new UsuarioCognitoDTO(
@@ -62,6 +64,7 @@ public class CognitoService {
                     usuario.userStatusAsString(),
                     Boolean.TRUE.equals(usuario.enabled()),
                     grupos,
+                    rol,
                     autorizado
             );
 
@@ -87,7 +90,9 @@ public class CognitoService {
                         .userPoolId(userPoolId)
                         .filter("username = \"" + username + "\"")
                         .build()
-        ).users().stream().findFirst()
+        ).users()
+                .stream()
+                .findFirst()
                 .orElseThrow(() ->
                         new RuntimeException("Usuario no encontrado en Cognito")
                 );
@@ -101,14 +106,32 @@ public class CognitoService {
 
         List<String> grupos = obtenerGrupos(username);
 
+        String rol = determinarRol(grupos);
+
+        boolean autorizado = grupos.contains(clienteGroup);
+
         return new UsuarioCognitoDTO(
                 usuario.username(),
                 email,
                 usuario.userStatusAsString(),
                 Boolean.TRUE.equals(usuario.enabled()),
                 grupos,
-                grupos.contains(clienteGroup)
+                rol,
+                autorizado
         );
+    }
+
+    private String determinarRol(List<String> grupos) {
+
+        if (grupos.contains("Empleado")) {
+            return "Empleado";
+        }
+
+        if (grupos.contains(clienteGroup)) {
+            return "Cliente";
+        }
+
+        return "Sin rol";
     }
 
     private List<String> obtenerGrupos(String username) {

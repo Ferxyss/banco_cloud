@@ -18,5 +18,6 @@ public class UsuarioCognitoDTO {
     private String estado;
     private boolean habilitado;
     private List<String> grupos;
+    private String rol;
     private boolean autorizado;
 }
