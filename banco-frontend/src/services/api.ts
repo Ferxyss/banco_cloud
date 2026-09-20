@@ -2,7 +2,7 @@ import axios from "axios";
 import { fetchAuthSession } from "aws-amplify/auth";
 
 const api = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "https://jnyvjudku4.execute-api.us-east-1.amazonaws.com",
   headers: {
     "Content-Type": "application/json",
   },
@@ -12,7 +12,6 @@ api.interceptors.request.use(
   async (config) => {
     try {
       const session = await fetchAuthSession();
-
       const token = session.tokens?.accessToken?.toString();
 
       if (token) {
@@ -27,9 +26,7 @@ api.interceptors.request.use(
 
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default api;
