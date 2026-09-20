@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 import {
   listarSolicitudes,
@@ -14,36 +13,76 @@ import {
   type UsuarioCognito,
 } from "../services/usuariosService";
 
+import Sidebar from "../components/Sidebar";
+
+import "./Empleado.css";
+
+function badgeClass(value: string) {
+  switch (value) {
+    case "APROBADA":
+      return "status-badge status-approved";
+
+    case "RECHAZADA":
+      return "status-badge status-rejected";
+
+    case "PENDIENTE":
+      return "status-badge status-pending";
+
+    default:
+      return "status-badge";
+  }
+}
+
 function Empleado() {
-  const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
-  const [usuarios, setUsuarios] = useState<UsuarioCognito[]>([]);
+  const [solicitudes, setSolicitudes] =
+    useState<Solicitud[]>([]);
 
-  const [cargando, setCargando] = useState(true);
-  const [cargandoUsuarios, setCargandoUsuarios] = useState(true);
+  const [usuarios, setUsuarios] =
+    useState<UsuarioCognito[]>([]);
 
-  const [procesando, setProcesando] = useState<number | null>(null);
-  const [procesandoUsuario, setProcesandoUsuario] = useState<string | null>(
-    null
-  );
+  const [cargando, setCargando] =
+    useState(true);
 
-  const [error, setError] = useState("");
-  const [errorUsuarios, setErrorUsuarios] = useState("");
+  const [cargandoUsuarios, setCargandoUsuarios] =
+    useState(true);
 
-  const [mensaje, setMensaje] = useState("");
-  const [mensajeUsuarios, setMensajeUsuarios] = useState("");
+  const [procesando, setProcesando] =
+    useState<number | null>(null);
 
-  const navigate = useNavigate();
+  const [procesandoUsuario, setProcesandoUsuario] =
+    useState<string | null>(null);
+
+  const [error, setError] =
+    useState("");
+
+  const [errorUsuarios, setErrorUsuarios] =
+    useState("");
+
+  const [mensaje, setMensaje] =
+    useState("");
+
+  const [mensajeUsuarios, setMensajeUsuarios] =
+    useState("");
 
   const cargarSolicitudes = async () => {
     try {
       setError("");
 
-      const datos = await listarSolicitudes();
+      const datos =
+        await listarSolicitudes();
 
       setSolicitudes(datos);
-    } catch (err) {
-      console.error("Error al cargar solicitudes:", err);
-      setError("No se pudieron cargar las solicitudes.");
+    } catch (error) {
+      console.error(
+        "Error al cargar solicitudes:",
+        error
+      );
+
+      setSolicitudes([]);
+
+      setError(
+        "No se pudieron cargar las solicitudes."
+      );
     } finally {
       setCargando(false);
     }
@@ -53,12 +92,21 @@ function Empleado() {
     try {
       setErrorUsuarios("");
 
-      const datos = await listarUsuarios();
+      const datos =
+        await listarUsuarios();
 
       setUsuarios(datos);
-    } catch (err) {
-      console.error("Error al cargar usuarios:", err);
-      setErrorUsuarios("No se pudieron cargar los usuarios.");
+    } catch (error) {
+      console.error(
+        "Error al cargar usuarios:",
+        error
+      );
+
+      setUsuarios([]);
+
+      setErrorUsuarios(
+        "No se pudieron cargar los usuarios."
+      );
     } finally {
       setCargandoUsuarios(false);
     }
@@ -69,7 +117,9 @@ function Empleado() {
     cargarUsuarios();
   }, []);
 
-  const handleAprobar = async (id: number) => {
+  const handleAprobar = async (
+    id: number
+  ) => {
     try {
       setError("");
       setMensaje("");
@@ -82,8 +132,11 @@ function Empleado() {
       );
 
       await cargarSolicitudes();
-    } catch (err) {
-      console.error("Error al aprobar solicitud:", err);
+    } catch (error) {
+      console.error(
+        "Error al aprobar solicitud:",
+        error
+      );
 
       setError(
         "No se pudo aprobar la solicitud. Verifica que tengas permisos de empleado."
@@ -93,7 +146,9 @@ function Empleado() {
     }
   };
 
-  const handleRechazar = async (id: number) => {
+  const handleRechazar = async (
+    id: number
+  ) => {
     try {
       setError("");
       setMensaje("");
@@ -101,11 +156,16 @@ function Empleado() {
 
       await rechazarSolicitud(id);
 
-      setMensaje("Solicitud rechazada correctamente.");
+      setMensaje(
+        "Solicitud rechazada correctamente."
+      );
 
       await cargarSolicitudes();
-    } catch (err) {
-      console.error("Error al rechazar solicitud:", err);
+    } catch (error) {
+      console.error(
+        "Error al rechazar solicitud:",
+        error
+      );
 
       setError(
         "No se pudo rechazar la solicitud. Verifica que tengas permisos de empleado."
@@ -115,21 +175,28 @@ function Empleado() {
     }
   };
 
-  const handleAutorizar = async (username: string) => {
+  const handleAutorizar = async (
+    username: string
+  ) => {
     try {
       setErrorUsuarios("");
       setMensajeUsuarios("");
       setProcesandoUsuario(username);
 
-      await autorizarUsuario(username);
+      await autorizarUsuario(
+        username
+      );
 
       setMensajeUsuarios(
         "El acceso del usuario fue autorizado correctamente."
       );
 
       await cargarUsuarios();
-    } catch (err) {
-      console.error("Error al autorizar usuario:", err);
+    } catch (error) {
+      console.error(
+        "Error al autorizar usuario:",
+        error
+      );
 
       setErrorUsuarios(
         "No se pudo autorizar el usuario. Verifica que tengas permisos de empleado."
@@ -139,159 +206,507 @@ function Empleado() {
     }
   };
 
+  const pendientes =
+    solicitudes.filter(
+      (solicitud) =>
+        solicitud.estado ===
+        "PENDIENTE"
+    ).length;
+
+  const aprobadas =
+    solicitudes.filter(
+      (solicitud) =>
+        solicitud.estado ===
+        "APROBADA"
+    ).length;
+
+  const rechazadas =
+    solicitudes.filter(
+      (solicitud) =>
+        solicitud.estado ===
+        "RECHAZADA"
+    ).length;
+
+  const noAutorizados =
+    usuarios.filter(
+      (usuario) =>
+        usuario.rol !==
+          "Empleado" &&
+        !usuario.autorizado
+    ).length;
+
+  /*
+   * Loading inicial:
+   * esperamos a que terminen ambas cargas para
+   * mostrar el panel completo.
+   */
+  const cargandoPanel =
+    cargando && cargandoUsuarios;
+
+  if (cargandoPanel) {
+    return (
+      <div className="employee-loading">
+        <div
+          className="employee-spinner"
+          aria-hidden="true"
+        />
+
+        <p>
+          Cargando panel de empleado...
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <header>
-        <h1>Panel de Empleado</h1>
+    <div className="employee-page">
+      <Sidebar />
 
-        <button onClick={() => navigate("/dashboard")}>
-          Volver al dashboard
-        </button>
-      </header>
+      <main className="employee-main">
 
-      <main>
-        <section>
-          <h2>Solicitudes de clientes</h2>
+        {/* =========================================
+            HEADER
+           ========================================= */}
 
-          {mensaje && <p>{mensaje}</p>}
-          {error && <p>{error}</p>}
+        <header className="employee-header">
+          <div>
+            <div className="breadcrumb">
+              BANCO CLOUD / ADMINISTRACIÓN
+            </div>
+
+            <h1>
+              Panel de empleado
+            </h1>
+
+            <p>
+              Gestiona solicitudes, cuentas y
+              accesos de clientes.
+            </p>
+          </div>
+
+          <div className="header-profile">
+            <div className="profile-avatar">
+              E
+            </div>
+
+            <div>
+              <strong>
+                Empleado
+              </strong>
+
+              <span>
+                Sesión activa
+              </span>
+            </div>
+          </div>
+        </header>
+
+        {/* =========================================
+            HERO
+           ========================================= */}
+
+        <section className="employee-hero">
+          <div>
+            <div className="hero-eyebrow">
+              CENTRO DE ADMINISTRACIÓN
+            </div>
+
+            <h2>
+              Todo bajo control.
+            </h2>
+
+            <p>
+              Revisa operaciones pendientes y
+              gestiona el acceso de los clientes.
+            </p>
+          </div>
+
+          <div className="hero-mark">
+            B
+          </div>
+        </section>
+
+        {/* =========================================
+            ESTADÍSTICAS
+           ========================================= */}
+
+        <section className="stats-grid">
+          <article className="stat-card">
+            <div className="stat-icon blue">
+              ▤
+            </div>
+
+            <div>
+              <span>
+                Total solicitudes
+              </span>
+
+              <strong>
+                {solicitudes.length}
+              </strong>
+            </div>
+          </article>
+
+          <article className="stat-card">
+            <div className="stat-icon amber">
+              →
+            </div>
+
+            <div>
+              <span>
+                Pendientes
+              </span>
+
+              <strong>
+                {pendientes}
+              </strong>
+            </div>
+          </article>
+
+          <article className="stat-card">
+            <div className="stat-icon green">
+              ✓
+            </div>
+
+            <div>
+              <span>
+                Aprobadas
+              </span>
+
+              <strong>
+                {aprobadas}
+              </strong>
+            </div>
+          </article>
+
+          <article className="stat-card">
+            <div className="stat-icon red">
+              ×
+            </div>
+
+            <div>
+              <span>
+                Rechazadas
+              </span>
+
+              <strong>
+                {rechazadas}
+              </strong>
+            </div>
+          </article>
+        </section>
+
+        {/* =========================================
+            GESTIÓN DE SOLICITUDES
+           ========================================= */}
+
+        <section className="content-card">
+          <div className="section-heading">
+            <div>
+              <div className="section-kicker">
+                GESTIÓN DE SOLICITUDES
+              </div>
+
+              <h2>
+                Solicitudes de clientes
+              </h2>
+            </div>
+
+            <div className="section-count">
+              {pendientes} pendientes
+            </div>
+          </div>
+
+          {mensaje && (
+            <div className="alert success">
+              ✓ {mensaje}
+            </div>
+          )}
+
+          {error && (
+            <div className="alert error">
+              × {error}
+            </div>
+          )}
 
           {cargando ? (
-            <p>Cargando solicitudes...</p>
-          ) : solicitudes.length === 0 ? (
-            <p>No existen solicitudes registradas.</p>
+            <div className="empty-state">
+              Cargando solicitudes...
+            </div>
+          ) : solicitudes.length ===
+            0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">
+                ▤
+              </div>
+
+              <strong>
+                No hay solicitudes registradas
+              </strong>
+
+              <span>
+                Las nuevas solicitudes de clientes
+                aparecerán aquí.
+              </span>
+            </div>
           ) : (
-            <div>
-              {solicitudes.map((solicitud) => (
-                <article key={solicitud.id}>
-                  <h3>Solicitud #{solicitud.id}</h3>
+            <div className="request-list">
+              {solicitudes.map(
+                (solicitud) => (
+                  <article
+                    className="request-row"
+                    key={solicitud.id}
+                  >
+                    <div className="request-main">
 
-                  <p>
-                    Cliente: {solicitud.cliente}
-                  </p>
+                      <div className="request-title-row">
+                        <strong>
+                          Solicitud #
+                          {solicitud.id}
+                        </strong>
 
-                  <p>
-                    Tipo de cuenta: {solicitud.tipoCuenta}
-                  </p>
+                        <span
+                          className={badgeClass(
+                            solicitud.estado
+                          )}
+                        >
+                          {solicitud.estado}
+                        </span>
+                      </div>
 
-                  <p>
-                    Monto inicial: $
-                    {solicitud.montoInicial.toLocaleString("es-CL")}
-                  </p>
+                      <span className="request-client">
+                        Cliente:{" "}
+                        {solicitud.cliente}
+                      </span>
 
-                  <p>
-                    Estado: {solicitud.estado}
-                  </p>
+                      <div className="request-meta">
 
-                  <p>
-                    Fecha:{" "}
-                    {new Date(
-                      solicitud.fechaSolicitud
-                    ).toLocaleString("es-CL")}
-                  </p>
+                        <span>
+                          {
+                            solicitud.tipoCuenta
+                          }
+                        </span>
 
-                  {solicitud.estado === "PENDIENTE" && (
-                    <div>
-                      <button
-                        onClick={() =>
-                          handleAprobar(solicitud.id)
-                        }
-                        disabled={procesando === solicitud.id}
-                      >
-                        {procesando === solicitud.id
-                          ? "Procesando..."
-                          : "Aprobar"}
-                      </button>
+                        <span>
+                          $
+                          {solicitud.montoInicial.toLocaleString(
+                            "es-CL"
+                          )}
+                        </span>
 
-                      <button
-                        onClick={() =>
-                          handleRechazar(solicitud.id)
-                        }
-                        disabled={procesando === solicitud.id}
-                      >
-                        Rechazar
-                      </button>
+                        <span>
+                          {new Date(
+                            solicitud.fechaSolicitud
+                          ).toLocaleString(
+                            "es-CL"
+                          )}
+                        </span>
+
+                      </div>
+
                     </div>
-                  )}
-                </article>
-              ))}
+
+                    {solicitud.estado ===
+                      "PENDIENTE" && (
+                      <div className="request-actions">
+
+                        <button
+                          type="button"
+                          className="approve-button"
+                          onClick={() =>
+                            handleAprobar(
+                              solicitud.id
+                            )
+                          }
+                          disabled={
+                            procesando ===
+                            solicitud.id
+                          }
+                        >
+                          {procesando ===
+                          solicitud.id
+                            ? "Procesando..."
+                            : "Aprobar"}
+                        </button>
+
+                        <button
+                          type="button"
+                          className="reject-button"
+                          onClick={() =>
+                            handleRechazar(
+                              solicitud.id
+                            )
+                          }
+                          disabled={
+                            procesando ===
+                            solicitud.id
+                          }
+                        >
+                          Rechazar
+                        </button>
+
+                      </div>
+                    )}
+                  </article>
+                )
+              )}
             </div>
           )}
         </section>
 
-        <hr />
+        {/* =========================================
+            CONTROL DE ACCESO
+           ========================================= */}
 
-        <section>
-          <h2>Usuarios registrados</h2>
+        <section className="content-card">
 
-          {mensajeUsuarios && <p>{mensajeUsuarios}</p>}
-          {errorUsuarios && <p>{errorUsuarios}</p>}
-
-          {cargandoUsuarios ? (
-            <p>Cargando usuarios...</p>
-          ) : usuarios.length === 0 ? (
-            <p>No existen usuarios registrados.</p>
-          ) : (
+          <div className="section-heading">
             <div>
-              {usuarios.map((usuario) => (
-                <article key={usuario.username}>
-                  <h3>
-                    {usuario.email || "Sin correo"}
-                  </h3>
+              <div className="section-kicker">
+                CONTROL DE ACCESO
+              </div>
 
-                  <p>
-                    Usuario: {usuario.username}
-                  </p>
+              <h2>
+                Usuarios registrados
+              </h2>
+            </div>
 
-                  <p>
-                    Estado: {usuario.estado}
-                  </p>
+            <div className="section-count">
+              {noAutorizados} por autorizar
+            </div>
+          </div>
 
-                  <p>
-                    Habilitado:{" "}
-                    {usuario.habilitado ? "Sí" : "No"}
-                  </p>
-
-                  <p>
-                    Grupos:{" "}
-                    {usuario.grupos.length > 0
-                      ? usuario.grupos.join(", ")
-                      : "Sin grupos"}
-                  </p>
-
-                  <p>
-                    Rol: {usuario.rol}
-                  </p>
-
-                  <p>
-                    {usuario.rol === "Empleado"
-                      ? "Acceso: Empleado"
-                      : usuario.autorizado
-                        ? "Acceso: Autorizado"
-                        : "Acceso: No autorizado"}
-                  </p>
-
-                  {usuario.rol !== "Empleado" &&
-                    !usuario.autorizado && (
-                      <button
-                        onClick={() =>
-                          handleAutorizar(usuario.username)
-                        }
-                        disabled={
-                          procesandoUsuario ===
-                          usuario.username
-                        }
-                      >
-                        {procesandoUsuario ===
-                        usuario.username
-                          ? "Autorizando..."
-                          : "Autorizar acceso"}
-                      </button>
-                    )}
-                </article>
-              ))}
+          {mensajeUsuarios && (
+            <div className="alert success">
+              ✓ {mensajeUsuarios}
             </div>
           )}
+
+          {errorUsuarios && (
+            <div className="alert error">
+              × {errorUsuarios}
+            </div>
+          )}
+
+          {cargandoUsuarios ? (
+            <div className="empty-state">
+              Cargando usuarios...
+            </div>
+          ) : usuarios.length ===
+            0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">
+                ◯
+              </div>
+
+              <strong>
+                No hay usuarios registrados
+              </strong>
+
+              <span>
+                Los nuevos usuarios de Cognito
+                aparecerán aquí.
+              </span>
+            </div>
+          ) : (
+            <div className="user-list">
+
+              {usuarios.map(
+                (usuario) => (
+                  <article
+                    className="user-row"
+                    key={
+                      usuario.username
+                    }
+                  >
+
+                    <div className="user-avatar">
+                      {(
+                        usuario.email ||
+                        "U"
+                      )
+                        .charAt(0)
+                        .toUpperCase()}
+                    </div>
+
+                    <div className="user-main">
+                      <strong>
+                        {usuario.email ||
+                          "Sin correo"}
+                      </strong>
+
+                      <span>
+                        {usuario.username}
+                      </span>
+                    </div>
+
+                    <div className="user-details">
+                      <span className="detail-label">
+                        Rol
+                      </span>
+
+                      <span className="detail-value">
+                        {usuario.rol}
+                      </span>
+                    </div>
+
+                    <div className="user-details">
+                      <span className="detail-label">
+                        Estado
+                      </span>
+
+                      <span className="detail-value">
+                        {usuario.estado}
+                      </span>
+                    </div>
+
+                    <div className="user-access">
+                      {usuario.rol ===
+                      "Empleado" ? (
+                        <span className="access-badge employee">
+                          Empleado
+                        </span>
+                      ) : usuario.autorizado ? (
+                        <span className="access-badge authorized">
+                          Autorizado
+                        </span>
+                      ) : (
+                        <span className="access-badge pending">
+                          No autorizado
+                        </span>
+                      )}
+                    </div>
+
+                    {usuario.rol !==
+                      "Empleado" &&
+                      !usuario.autorizado && (
+                        <button
+                          type="button"
+                          className="authorize-button"
+                          onClick={() =>
+                            handleAutorizar(
+                              usuario.username
+                            )
+                          }
+                          disabled={
+                            procesandoUsuario ===
+                            usuario.username
+                          }
+                        >
+                          {procesandoUsuario ===
+                          usuario.username
+                            ? "Autorizando..."
+                            : "Autorizar acceso"}
+                        </button>
+                      )}
+
+                  </article>
+                )
+              )}
+
+            </div>
+          )}
+
         </section>
       </main>
     </div>

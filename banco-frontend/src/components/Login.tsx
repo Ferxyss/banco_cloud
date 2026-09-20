@@ -1,5 +1,8 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+
+import Icon from "./Icon";
+import "./Login.css";
 import { iniciarSesion } from "../services/authService";
 
 function Login() {
@@ -10,9 +13,7 @@ function Login() {
 
   const navigate = useNavigate();
 
-  const handleLogin = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     setError("");
@@ -21,19 +22,9 @@ function Login() {
     try {
       const usernameNormalizado = username.trim().toLowerCase();
 
-      console.log(
-        "Intentando iniciar sesión con:",
-        usernameNormalizado
-      );
-
       const resultado = await iniciarSesion(
         usernameNormalizado,
         password
-      );
-
-      console.log(
-        "Resultado de Cognito:",
-        resultado
       );
 
       if (resultado.isSignedIn) {
@@ -45,15 +36,11 @@ function Login() {
 
       switch (paso) {
         case "CONFIRM_SIGN_UP":
-          setError(
-            "La cuenta todavía no está confirmada."
-          );
+          setError("La cuenta todavía no está confirmada.");
           break;
 
         case "RESET_PASSWORD":
-          setError(
-            "Debes restablecer la contraseña."
-          );
+          setError("Debes restablecer la contraseña.");
           break;
 
         case "CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED":
@@ -71,25 +58,10 @@ function Login() {
           break;
       }
     } catch (err) {
-      console.error(
-        "ERROR REAL DE COGNITO:",
-        err
-      );
+      console.error("ERROR REAL DE COGNITO:", err);
 
       if (err instanceof Error) {
-        console.error(
-          "Nombre del error:",
-          err.name
-        );
-
-        console.error(
-          "Mensaje:",
-          err.message
-        );
-
-        setError(
-          `${err.name}: ${err.message}`
-        );
+        setError(`${err.name}: ${err.message}`);
       } else {
         setError(
           "Se produjo un error desconocido al iniciar sesión."
@@ -101,68 +73,170 @@ function Login() {
   };
 
   return (
-    <div>
-      <h1>Banco Cloud</h1>
+    <div className="login-page">
+      <div className="login-decoration">
+        <div className="decoration-circle circle-one" />
+        <div className="decoration-circle circle-two" />
 
-      <h2>Iniciar sesión</h2>
+        <div className="login-decoration-content">
+          <p className="decoration-eyebrow">BANCOCLOUD</p>
 
-      <form onSubmit={handleLogin}>
-        <div>
-          <label htmlFor="username">
-            Correo electrónico
-          </label>
+          <h2>
+            Tu banca, simple y segura.
+          </h2>
 
-          <input
-            id="username"
-            type="email"
-            value={username}
-            onChange={(event) =>
-              setUsername(event.target.value)
-            }
-            required
-          />
+          <p>
+            Consulta tus cuentas, gestiona solicitudes y mantén
+            tus productos financieros bajo control desde
+            cualquier lugar.
+          </p>
         </div>
 
-        <div>
-          <label htmlFor="password">
-            Contraseña
-          </label>
+        <div className="decoration-card">
+          <span className="decoration-card-icon">
+            <Icon name="wallet" />
+          </span>
 
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(event) =>
-              setPassword(event.target.value)
-            }
-            required
-          />
+          <div>
+            <strong>
+              Tu dinero, siempre contigo
+            </strong>
+
+            <span>
+              Una banca simple, segura y digital
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <main className="login-card">
+        <div className="login-brand">
+          <span className="brand-mark">B</span>
+
+          <span>
+            Banco
+            <span className="brand-accent">
+              Cloud
+            </span>
+          </span>
         </div>
 
-        <button
-          type="submit"
-          disabled={cargando}
+        <div className="login-heading">
+          <p className="eyebrow">
+            BIENVENIDO DE VUELTA
+          </p>
+
+          <h1>
+            Inicia sesión
+          </h1>
+
+          <p>
+            Accede a tu cuenta para continuar.
+          </p>
+        </div>
+
+        <div className="login-mode-note">
+          Tu acceso y rol se determinan automáticamente mediante
+          Amazon Cognito.
+        </div>
+
+        <form
+          className="login-form"
+          onSubmit={handleLogin}
         >
-          {cargando
-            ? "Iniciando sesión..."
-            : "Iniciar sesión"}
-        </button>
-      </form>
+          <label>
+            Correo electrónico
 
-      {error && (
-        <p>
-          {error}
+            <input
+              type="email"
+              placeholder="tu@bancocloud.com"
+              value={username}
+              onChange={(event) =>
+                setUsername(event.target.value)
+              }
+              required
+            />
+          </label>
+
+          <label>
+            Contraseña
+
+            <div className="password-field">
+              <input
+                type="password"
+                placeholder="Ingresa tu contraseña"
+                value={password}
+                onChange={(event) =>
+                  setPassword(event.target.value)
+                }
+                required
+              />
+
+              <span aria-hidden="true">
+                •••
+              </span>
+            </div>
+          </label>
+
+          <div className="login-options">
+            <label className="remember">
+              <input type="checkbox" />
+              Recordarme
+            </label>
+
+            <span className="forgot muted-action">
+              Acceso protegido por Cognito
+            </span>
+          </div>
+
+          <button
+            type="submit"
+            className="primary-button login-button"
+            disabled={cargando}
+          >
+            {cargando
+              ? "Iniciando sesión..."
+              : "Ingresar"}
+
+            {!cargando && (
+              <Icon name="arrow" />
+            )}
+          </button>
+        </form>
+
+        {error && (
+          <div
+            className="auth-alert error-alert"
+            role="alert"
+          >
+            <Icon name="close" />
+
+            <span>
+              {error}
+            </span>
+          </div>
+        )}
+
+        <p className="login-help">
+          ¿Aún no tienes una cuenta?{" "}
+
+          <button
+            type="button"
+            onClick={() =>
+              navigate("/registro")
+            }
+          >
+            Solicita ser cliente
+          </button>
         </p>
-      )}
 
-      <hr />
+        <p className="login-security">
+          <span>✓</span>
 
-      <button
-        type="button"
-        onClick={() => navigate("/registro")}
-      >
-        Crear una cuenta
-      </button>
+          Tus credenciales se procesan de forma segura mediante
+          Cognito
+        </p>
+      </main>
     </div>
   );
 }

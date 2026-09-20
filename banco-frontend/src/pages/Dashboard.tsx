@@ -1,131 +1,348 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+
 import {
-  cerrarSesion,
   obtenerGrupos,
   obtenerUsuarioActual,
 } from "../services/authService";
 
-function Dashboard() {
-  const [usuario, setUsuario] = useState("");
-  const [rol, setRol] = useState("");
-  const [cargando, setCargando] = useState(true);
+import Icon from "../components/Icon";
+import Sidebar from "../components/Sidebar";
 
-  const navigate = useNavigate();
+import "./Dashboard.css";
+
+function Dashboard() {
+  const [usuario, setUsuario] =
+    useState("");
+
+  const [rol, setRol] =
+    useState("");
+
+  const [cargando, setCargando] =
+    useState(true);
 
   useEffect(() => {
-    const cargarDatosUsuario = async () => {
-      try {
-        const usuarioActual = await obtenerUsuarioActual();
-        const grupos = await obtenerGrupos();
+    let activo = true;
 
-        if (usuarioActual) {
-          setUsuario(usuarioActual.username);
-        }
+    const cargarDatosUsuario =
+      async () => {
+        /*
+         * Guardamos el momento en que comienza
+         * la carga para garantizar que el loading
+         * sea visible durante al menos 700 ms.
+         */
+        const inicio =
+          Date.now();
 
-        if (grupos.includes("Empleado")) {
-          setRol("Empleado");
-        } else if (grupos.includes("Cliente")) {
-          setRol("Cliente");
+        try {
+          const [
+            usuarioActual,
+            grupos,
+          ] = await Promise.all([
+            obtenerUsuarioActual(),
+            obtenerGrupos(),
+          ]);
+
+          if (!activo) {
+            return;
+          }
+
+          if (usuarioActual) {
+            setUsuario(
+              usuarioActual.username
+            );
+          }
+
+          if (
+            grupos.includes("Empleado")
+          ) {
+            setRol("Empleado");
+          } else if (
+            grupos.includes("Cliente")
+          ) {
+            setRol("Cliente");
+          } else {
+            setRol("Sin rol");
+          }
+        } catch (error) {
+          console.error(
+            "Error al obtener datos del usuario:",
+            error
+          );
+
+          if (activo) {
+            setRol("Sin rol");
+          }
+        } finally {
+          /*
+           * Tiempo mínimo del loading:
+           * 700 ms.
+           */
+          const transcurrido =
+            Date.now() - inicio;
+
+          const tiempoRestante =
+            Math.max(
+              700 - transcurrido,
+              0
+            );
+
+          await new Promise<void>(
+            (resolve) => {
+              setTimeout(
+                resolve,
+                tiempoRestante
+              );
+            }
+          );
+
+          if (activo) {
+            setCargando(false);
+          }
         }
-      } catch (error) {
-        console.error(
-          "Error al obtener datos del usuario:",
-          error
-        );
-      } finally {
-        setCargando(false);
-      }
-    };
+      };
 
     cargarDatosUsuario();
+
+    return () => {
+      activo = false;
+    };
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await cerrarSesion();
-      navigate("/");
-    } catch (error) {
-      console.error(
-        "Error al cerrar sesión:",
-        error
-      );
-    }
-  };
+  /*
+   * =====================================================
+   * LOADING
+   * =====================================================
+   */
 
   if (cargando) {
-    return <p>Cargando información...</p>;
+    return (
+      <div
+        className="dashboard-loading"
+        role="status"
+        aria-live="polite"
+      >
+        <div
+          className="dashboard-spinner"
+          aria-hidden="true"
+        />
+
+        <p>
+          Cargando tu información...
+        </p>
+      </div>
+    );
   }
 
+  const esEmpleado =
+    rol === "Empleado";
+
   return (
-    <div>
-      <header>
-        <h1>Banco Cloud</h1>
+    <div className="dashboard-page">
+      <Sidebar />
 
-        <div>
-          <p>
-            Usuario:{" "}
-            {usuario || "No identificado"}
-          </p>
+      <main className="dashboard-main">
+        {/* =================================================
+            HEADER
+           ================================================= */}
 
-          <p>
-            Rol: {rol || "Sin rol"}
-          </p>
+        <header className="dashboard-topbar">
+          <div>
+            <p className="dashboard-breadcrumb">
+              BANCO CLOUD / INICIO
+            </p>
 
-          <button onClick={handleLogout}>
-            Cerrar sesión
-          </button>
-        </div>
-      </header>
+            <h1>
+              Bienvenido de vuelta
+            </h1>
+          </div>
 
-      <main>
-        <section>
-          <h2>Bienvenido a Banco Cloud</h2>
+          <div className="dashboard-user">
+            <span className="dashboard-user-icon">
+              <Icon name="user" />
+            </span>
 
-          <p>
-            Gestiona tus cuentas y solicitudes desde
-            este panel.
-          </p>
-        </section>
+            <div>
+              <strong>
+                {rol || "Usuario"}
+              </strong>
 
-        <section>
-          <h2>Accesos</h2>
+              <span>
+                {usuario ||
+                  "Sesión activa"}
+              </span>
+            </div>
+          </div>
+        </header>
 
-          <button
-            onClick={() => navigate("/cuentas")}
-          >
-            Mis cuentas
-          </button>
+        {/* =================================================
+            HERO
+           ================================================= */}
 
-          <button
-            onClick={() =>
-              navigate("/solicitudes")
-            }
-          >
-            Solicitudes
-          </button>
+        <section className="dashboard-welcome-card">
+          <div>
+            <p className="dashboard-eyebrow">
+              TU BANCO EN LA NUBE
+            </p>
 
-          {rol === "Empleado" && (
-            <button
-              onClick={() =>
-                navigate("/empleado")
-              }
-            >
-              Panel de empleado
-            </button>
-          )}
-        </section>
-
-        {rol === "Empleado" && (
-          <section>
-            <h2>Administración</h2>
+            <h2>
+              Gestiona tus productos financieros desde un solo lugar.
+            </h2>
 
             <p>
-              Puedes gestionar las solicitudes de los
-              clientes y procesar la apertura de cuentas.
+              Consulta tus cuentas, revisa solicitudes
+              y accede a las funciones disponibles para tu rol.
             </p>
-          </section>
-        )}
+          </div>
+
+          <div className="dashboard-welcome-mark">
+            B
+          </div>
+        </section>
+
+        {/* =================================================
+            ACCESOS
+           ================================================= */}
+
+        <section className="dashboard-content-section">
+          <div className="dashboard-section-heading">
+            <div>
+              <p>
+                ACCESOS
+              </p>
+
+              <h2>
+                ¿Qué necesitas hacer?
+              </h2>
+            </div>
+          </div>
+
+          <div className="dashboard-card-grid">
+            {/* =================================================
+                CUENTAS
+               ================================================= */}
+
+            <button
+              type="button"
+              className="dashboard-action-card"
+              onClick={() =>
+                (window.location.href =
+                  "/cuentas")
+              }
+            >
+              <span className="dashboard-action-icon blue">
+                <Icon name="wallet" />
+              </span>
+
+              <span className="dashboard-action-copy">
+                <strong>
+                  {esEmpleado
+                    ? "Todas las cuentas"
+                    : "Mis cuentas"}
+                </strong>
+
+                <small>
+                  {esEmpleado
+                    ? "Consulta las cuentas registradas en BancoCloud."
+                    : "Consulta tus cuentas y saldos disponibles."}
+                </small>
+              </span>
+
+              <Icon
+                name="arrow"
+                className="dashboard-action-arrow"
+              />
+            </button>
+
+            {/* =================================================
+                SOLICITUDES
+               ================================================= */}
+
+            <button
+              type="button"
+              className="dashboard-action-card"
+              onClick={() =>
+                (window.location.href =
+                  "/solicitudes")
+              }
+            >
+              <span className="dashboard-action-icon teal">
+                <Icon name="file" />
+              </span>
+
+              <span className="dashboard-action-copy">
+                <strong>
+                  Solicitudes
+                </strong>
+
+                <small>
+                  {esEmpleado
+                    ? "Consulta y gestiona las solicitudes de clientes."
+                    : "Revisa el estado y crea nuevas solicitudes."}
+                </small>
+              </span>
+
+              <Icon
+                name="arrow"
+                className="dashboard-action-arrow"
+              />
+            </button>
+
+            {/* =================================================
+                ADMINISTRACION
+               ================================================= */}
+
+            {esEmpleado && (
+              <button
+                type="button"
+                className="dashboard-action-card"
+                onClick={() =>
+                  (window.location.href =
+                    "/empleado")
+                }
+              >
+                <span className="dashboard-action-icon violet">
+                  <Icon name="users" />
+                </span>
+
+                <span className="dashboard-action-copy">
+                  <strong>
+                    Administración
+                  </strong>
+
+                  <small>
+                    Gestiona solicitudes y autoriza clientes.
+                  </small>
+                </span>
+
+                <Icon
+                  name="arrow"
+                  className="dashboard-action-arrow"
+                />
+              </button>
+            )}
+          </div>
+        </section>
+
+        {/* =================================================
+            SEGURIDAD
+           ================================================= */}
+
+        <section className="dashboard-security-note">
+          <span className="dashboard-security-icon">
+            <Icon name="check" />
+          </span>
+
+          <div>
+            <strong>
+              Acceso protegido
+            </strong>
+
+            <p>
+              Tu sesión y permisos son gestionados
+              mediante Amazon Cognito.
+            </p>
+          </div>
+        </section>
       </main>
     </div>
   );
