@@ -22,10 +22,17 @@ public class SecurityConfig {
 
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+            .cors(cors ->
+                cors.configurationSource(corsConfigurationSource())
+            )
+
             .authorizeHttpRequests(auth -> auth
 
                 .requestMatchers("/actuator/health")
+                    .permitAll()
+
+                .requestMatchers(HttpMethod.OPTIONS, "/**")
                     .permitAll()
 
                 .requestMatchers("/api/admin/usuarios/**")
@@ -55,9 +62,12 @@ public class SecurityConfig {
                 .anyRequest()
                     .authenticated()
             )
+
             .oauth2ResourceServer(oauth2 ->
                 oauth2.jwt(jwt ->
-                    jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
+                    jwt.jwtAuthenticationConverter(
+                        jwtAuthenticationConverter()
+                    )
                 )
             );
 
@@ -70,34 +80,37 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
-                List.of("http://localhost:5173")
+            List.of(
+                "http://localhost:5173",
+                "https://main.d2cp0cpk6yob92.amplifyapp.com"
+            )
         );
 
         configuration.setAllowedMethods(
-                List.of(
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "OPTIONS"
-                )
+            List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"
+            )
         );
 
         configuration.setAllowedHeaders(
-                List.of(
-                        "Authorization",
-                        "Content-Type"
-                )
+            List.of(
+                "Authorization",
+                "Content-Type"
+            )
         );
 
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+            new UrlBasedCorsConfigurationSource();
 
         source.registerCorsConfiguration(
-                "/**",
-                configuration
+            "/**",
+            configuration
         );
 
         return source;
@@ -107,21 +120,21 @@ public class SecurityConfig {
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
 
         JwtGrantedAuthoritiesConverter authoritiesConverter =
-                new JwtGrantedAuthoritiesConverter();
+            new JwtGrantedAuthoritiesConverter();
 
         authoritiesConverter.setAuthoritiesClaimName(
-                "cognito:groups"
+            "cognito:groups"
         );
 
         authoritiesConverter.setAuthorityPrefix(
-                "ROLE_"
+            "ROLE_"
         );
 
         JwtAuthenticationConverter converter =
-                new JwtAuthenticationConverter();
+            new JwtAuthenticationConverter();
 
         converter.setJwtGrantedAuthoritiesConverter(
-                authoritiesConverter
+            authoritiesConverter
         );
 
         return converter;
